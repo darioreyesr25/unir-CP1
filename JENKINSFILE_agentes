@@ -41,7 +41,6 @@ pipeline {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             unstash name:'code'
                             sh '''
-                                export PYTHONPATH=${WORKSPACE}
                                 export FLASK_APP=app/api.py
                                 flask run &
                                 
