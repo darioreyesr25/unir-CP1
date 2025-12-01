@@ -56,7 +56,7 @@ pipeline {
                             
                             sleep 15
                             
-                            pytest --junitxml=result-rest.xml test/rest
+                            python3 -m pytest --junitxml=result-rest.xml test/rest
                             '''
                         }
                         stash name:'rest-res', includes:'result-rest.xml'
