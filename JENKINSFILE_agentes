@@ -47,7 +47,7 @@ pipeline {
                                 
                             sleep 4
 
-                            java -jar /home/vboxuser/jenkins/wiremock/wiremock-standalone-3.3.1.jar --port 9090 --root-dir /home/vboxuser/jenkins/wiremock &
+                            java -jar /home/jenkins/wiremock/wiremock-standalone-3.3.1.jar --port 9090 --root-dir /home/jenkins/wiremock &
                             export PYTHONPATH=${WORKSPACE}
                             
                             sleep 15
