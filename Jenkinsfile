@@ -5,6 +5,8 @@ pipeline {
             steps {
                 // Obtener código del repo
                 git 'https://github.com/darioreyesr25/unir-CP1.git'
+                bat 'dir'
+                echo WORKSPACE
             }
         }
     
@@ -27,16 +29,20 @@ pipeline {
         }
         
         
-        stage('Service') {
+        stage('Rest') {
             steps {
-                bat '''
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    bat '''
                     set FLASK_APP=app\\api.py
                     start flask run
                     start java -jar C:\\proyectos\\wiremock-standalone-3.13.2.jar --port 9090 --root-dir C:\\proyectos\\mappings
-                    set PYTHONPATH=%WORKSPACE%
+
+                    ping -n 10 127.0.0.1
+
                     pytest --junitxml=result-rest.xml test\\rest
                     '''
-
+                    
+                }
             }
         }
         
