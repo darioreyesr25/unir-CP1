@@ -28,7 +28,7 @@ pipeline {
                             sh '''
                                 ls -la
                                 export PYTHONPATH=${WORKSPACE}
-                                /home/jenkins/.local/bin/pytest --junitxml=result-unit.xml test/unit
+                                pytest --junitxml=result-unit.xml test/unit
                                 '''
                         }
                         stash name:'unit-res', includes:'result-unit.xml'
