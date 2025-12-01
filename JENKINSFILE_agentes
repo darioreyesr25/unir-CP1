@@ -43,7 +43,7 @@ pipeline {
                             sh '''
                                 export PYTHONPATH=${WORKSPACE}
                                 export FLASK_APP=app/api.py
-                                flask run &
+                                python -m flask run &
                                 
                             sleep 4
 
