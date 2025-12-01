@@ -51,7 +51,7 @@ pipeline {
                             wget -P /home/jenkins/wiremock/ https://repo1.maven.org/maven2/org/wiremock/wiremock-standalone/3.3.1/wiremock-standalone-3.3.1.jar
                             sleep 10
                             
-                            java -jar /home/jenkins/wiremock/wiremock-standalone-3.3.1.jar --port 9090 --root-dir /home/jenkins/wiremock/mappings/mappings &
+                            java -jar /home/jenkins/wiremock/wiremock-standalone-3.3.1.jar --port 9090 --root-dir /home/jenkins/wiremock/mappings &
                             export PYTHONPATH=${WORKSPACE}
                             
                             sleep 15
