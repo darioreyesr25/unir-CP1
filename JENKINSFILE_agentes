@@ -36,7 +36,7 @@ pipeline {
                 }
 
                 stage('Rest') {
-                    agent { label 'agent2' }
+                    agent { label 'linuxflask' }
                     steps {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             unstash name:'code'
