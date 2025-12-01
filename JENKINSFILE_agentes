@@ -42,16 +42,16 @@ pipeline {
                             unstash name:'code'
                             sh '''
                                 export FLASK_APP=app/api.py
-                                /home/agent2/.local/bin/flask run &
+                                flask run &
                                 
                             sleep 4
 
-                            java -jar /home/agent2/wiremock/wiremock-standalone-3.3.1.jar --port 9090 --root-dir /home/agent2/wiremock &
+                            java -jar /home/vboxuser/jenkins/wiremock/wiremock-standalone-3.3.1.jar --port 9090 --root-dir /home/vboxuser/jenkins/wiremock &
                             export PYTHONPATH=${WORKSPACE}
                             
                             sleep 15
                             
-                            /home/agent2/.local/bin/pytest --junitxml=result-rest.xml test/rest
+                            pytest --junitxml=result-rest.xml test/rest
                             '''
                         }
                         stash name:'rest-res', includes:'result-rest.xml'
