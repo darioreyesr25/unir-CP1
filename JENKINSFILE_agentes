@@ -43,6 +43,7 @@ pipeline {
                             sh '''
                                 ls -la
                                 export FLASK_APP=app/api.py
+                                flask routes
                                 flask run &
                                 
                             sleep 4
