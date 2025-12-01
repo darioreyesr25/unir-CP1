@@ -21,7 +21,7 @@ pipeline {
         stage('Tests') {
             parallel {
                 stage('Unit') {
-                    agent { label 'agent1' }
+                    agent linuxflask
                     steps {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             unstash name:'code'
