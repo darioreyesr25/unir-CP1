@@ -84,6 +84,25 @@ pipeline {
                     ])
             }
         }
+
+        stage('Security') {
+            steps {
+                bat '''
+                    bandit --exit-zero -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}"
+                '''
+                // Configuración de los Quality Gates para Bandit
+                recordIssues(
+                    tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')],
+                    qualityGates: [
+                        // Requisito: 2 o más hallazgos = Unstable (Amarillo)
+                        [threshold: 2, type: 'TOTAL', unstable: true],
+                        
+                        // Requisito: 4 o más hallazgos = Unhealthy/Failure (Rojo)
+                        [threshold: 4, type: 'TOTAL', unstable: false]
+                    ]
+                )
+            }
+        }
         stage('Result') {
             steps {
                 junit 'result*.xml'
