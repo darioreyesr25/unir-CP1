@@ -45,7 +45,39 @@ pipeline {
                 }
             }
         }
-        
+
+        stage('Cobertura') {
+            steps {
+                // Ejecución de pruebas y generación del reporte XML para Python
+                bat '''
+                    set PYTHONPATH=%WORKSPACE%
+                    coverage run --branch --source=app --omit=app\\__init__.py,app\\api.py -m pytest test\\unit
+                    coverage xml
+                '''
+                
+                // Configuración de los Quality Gates según tus especificaciones
+                recordCoverage(
+                    tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
+                    id: 'coverage',
+                    name: 'Cobertura de Código',
+                    
+                    qualityGates: [
+                        // Líneas: < 85 marcará ERROR (Rojo), < 95 marcará UNSTABLE (Amarillo)
+                        [threshold: 85.0, metric: 'LINE', baseline: 'PROJECT', criticality: 'FAILURE'],
+                        [threshold: 95.0, metric: 'LINE', baseline: 'PROJECT', criticality: 'UNSTABLE'],
+                        
+                        // Ramas: < 80 marcará ERROR (Rojo), < 90 marcará UNSTABLE (Amarillo)
+                        [threshold: 80.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'FAILURE'],
+                        [threshold: 90.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'UNSTABLE']
+                    ],
+                    
+                    // Configuración para que el pipeline continúe aunque no se cumplan los umbrales
+                    failUnhealthy: false,
+                    failUnstable: false,
+                    setBuildStatusToUnstable: true 
+                )
+            }
+        }
         stage('Result') {
             steps {
                 junit 'result*.xml'
