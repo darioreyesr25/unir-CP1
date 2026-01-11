@@ -69,7 +69,7 @@ pipeline {
                         // Ramas: < 80 marcará ERROR (Rojo), < 90 marcará UNSTABLE (Amarillo)
                         [threshold: 80.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'FAILURE'],
                         [threshold: 90.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'UNSTABLE']
-                    ]
+                    ])
             }
         }
         stage('Result') {
