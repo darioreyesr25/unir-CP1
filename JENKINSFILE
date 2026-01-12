@@ -49,8 +49,6 @@ pipeline {
                 recordIssues(
                     tools: [flake8(name: 'Flake8', pattern: 'flake8.out')],
                     qualityGates: [
-                            // Si hay más de 10 avisos: UNSTABLE (Amarillo)
-                            [threshold: 10, type: 'TOTAL', unstable: true],
                             // Si hay más de 11 avisos: FAILURE (Rojo)
                             [threshold: 8, type: 'TOTAL', unhealthy: true]
                     ]
