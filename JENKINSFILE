@@ -1,6 +1,9 @@
 pipeline {
     agent any
     stages {
+        // Definición de las etapas del pipeline
+        // Cada etapa representa una fase del proceso de integración continua
+        // Etapa para obtener el código fuente del repositorio
         stage('Get Code') {
             steps {
                 // Obtener código del repo
@@ -9,21 +12,24 @@ pipeline {
                 echo WORKSPACE
             }
         }
-
+        // Etapa para ejecutar pruebas unitarias con cobertura de código
         stage('Unit') {
             steps {
+                // Ejecución de las pruebas unitarias con cobertura de código
+                // Para evitar que el pipeline ejecute mas de una vez pytest test/unit, se crea el archivo coverage.xml directamente
                 bat '''
                     set PYTHONPATH=%WORKSPACE%
                     coverage run --branch --source=app --omit=app\\__init__.py,app\\api.py -m pytest --junitxml=result-unit.xml test\\unit
                     coverage xml
                     '''
-                    
                 }
         }
-
+        // Etapa para ejecutar pruebas RESTful
         stage('Rest') {
             steps {
+                // Ejecución de las pruebas RESTful ignorando errores de salida para que el pipeline continúe
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    // Iniciar el servidor Flask y WireMock, esperar 10 segundos y ejecutar las pruebas RESTful
                     bat '''
                     set FLASK_APP=app\\api.py
                     start flask run
@@ -32,16 +38,16 @@ pipeline {
                     ping -n 10 127.0.0.1
 
                     pytest --junitxml=result-rest.xml test\\rest
-                    '''
-                    
+                    '''  
                 }
             }
         }
-
+        // Etapa para análisis estático de código con flake8
         stage('Static') {
             steps {
                 // Ejecución de flake8 ignorando errores de salida para que el pipeline continúe
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    // Ejecución de flake8 y redirección de la salida a un archivo
                     bat '''
                         flake8 --exit-zero --format=pylint app > flake8.out
                     '''
@@ -60,11 +66,11 @@ pipeline {
             }
         }
 
-        stage('Security') {
+        stage('Security Test') {
             steps {
                 // Ejecución de Bandit ignorando errores de salida para que el pipeline continúe
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                
+                    // Ejecución de Bandit y redirección de la salida a un archivo
                     bat '''
                         bandit --exit-zero -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}"
                     '''
@@ -82,32 +88,33 @@ pipeline {
                 }
             }
         }
-
+        // Etapa para ejecutar pruebas de rendimiento con JMeter
         stage('Performance') {
             steps {
                 // Ejecución de pruebas de rendimiento con JMeter ignorando errores de salida para que el pipeline continúe
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    // Iniciar el servidor Flask y ejecutar las pruebas de rendimiento con JMeter
                     bat '''
                         set FLASK_APP=app\\api.py
                         start flask run
                         C:\\proyectos\\apache-jmeter-5.6.3\\bin\\jmeter -n -t test\\jmeter\\flask.jmx -f -l flask.jtl
                     '''
-                    perfReport sourceDataFiles: 'flask.jtl' //
+                    perfReport sourceDataFiles: 'flask.jtl' // Generación del informe de rendimiento
                 }
             }
         }
-
-        stage('Cobertura') {
+        // Etapa para analizar la cobertura de código
+        stage('Coverage') {
             steps {
                 //Ejecución de las pruebas de cobertura de código ignorando errores de salida para que el pipeline continúe
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     // Registro de la cobertura de código y configuración de Quality Gates
-                    // Configuración de los Quality Gates según tus especificaciones
+                    // Se utiliza el informe coverage.xml generado en la etapa 'Unit'
                     recordCoverage(
                         tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
                         id: 'coverage',
                         name: 'Cobertura de Código',
-                        
+                        // Definición de los Quality Gates para la cobertura de código
                         qualityGates: [
                             // Líneas: < 85 marcará ERROR (Rojo), < 95 marcará UNSTABLE (Amarillo)
                             [threshold: 85.0, metric: 'LINE', baseline: 'PROJECT', criticality: 'FAILURE'],
@@ -116,7 +123,8 @@ pipeline {
                             // Ramas: < 80 marcará ERROR (Rojo), < 90 marcará UNSTABLE (Amarillo)
                             [threshold: 80.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'FAILURE'],
                             [threshold: 90.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'UNSTABLE']
-                        ])
+                        ]
+                    )
                 }
                 
             }
