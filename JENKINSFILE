@@ -50,9 +50,9 @@ pipeline {
                     tools: [flake8(name: 'Flake8', pattern: 'flake8.out')],
                     qualityGates: [
                             // Si hay más de 8 avisos: UNSTABLE (Amarillo)
-                            [threshold: 8, type: 'TOTAL', unstable: true],
+                            [threshold: 7, type: 'TOTAL', unstable: true],
                             // Si hay más de 11 avisos: FAILURE (Rojo)
-                            [threshold: 9, type: 'TOTAL', unhealthy: true]
+                            [threshold: 8, type: 'TOTAL', unhealthy: true]
                     ]
                 )
             }
