@@ -52,7 +52,7 @@ pipeline {
                             // Si hay más de 8 avisos: UNSTABLE (Amarillo)
                             [threshold: 7, type: 'TOTAL', unstable: true],
                             // Si hay más de 11 avisos: FAILURE (Rojo)
-                            [threshold: 8, type: 'TOTAL', unhealthy: true]
+                            [threshold: 8, type: 'TOTAL', unstable: false]
                     ]
                 )
             }
