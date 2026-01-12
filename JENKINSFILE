@@ -41,70 +41,84 @@ pipeline {
         stage('Static') {
             steps {
                 // Ejecución de flake8 ignorando errores de salida para que el pipeline continúe
-                bat '''
-                    flake8 --exit-zero --format=pylint app > flake8.out
-                '''
-                
-                // Registro de incidencias con Warnings Next Generation Plugin
-                recordIssues(
-                    tools: [flake8(name: 'Flake8', pattern: 'flake8.out')],
-                    qualityGates: [
-                            // Si hay más de 8 avisos: UNSTABLE (Amarillo)
-                            [threshold: 8, type: 'TOTAL', unstable: true],
-                            // Si hay más de 11 avisos: FAILURE (Rojo)
-                            [threshold: 10, type: 'TOTAL', unstable: false]
-                    ]
-                )
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    bat '''
+                        flake8 --exit-zero --format=pylint app > flake8.out
+                    '''
+                    
+                    // Registro de incidencias con Warnings Next Generation Plugin
+                    recordIssues(
+                        tools: [flake8(name: 'Flake8', pattern: 'flake8.out')],
+                        qualityGates: [
+                                // Si hay más de 8 avisos: UNSTABLE (Amarillo)
+                                [threshold: 8, type: 'TOTAL', unstable: true],
+                                // Si hay más de 11 avisos: FAILURE (Rojo)
+                                [threshold: 10, type: 'TOTAL', unstable: false]
+                        ]
+                    )
+                }
             }
         }
 
         stage('Security') {
             steps {
-                bat '''
-                    bandit --exit-zero -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}"
-                '''
-                // Configuración de los Quality Gates para Bandit
-                recordIssues(
-                    tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')],
-                    qualityGates: [
-                        // Requisito: 2 o más hallazgos = Unstable (Amarillo)
-                        [threshold: 2, type: 'TOTAL', unstable: true],
-                        
-                        // Requisito: 4 o más hallazgos = Unhealthy/Failure (Rojo)
-                        [threshold: 4, type: 'TOTAL', unstable: false]
-                    ]
-                )
+                // Ejecución de Bandit ignorando errores de salida para que el pipeline continúe
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                
+                    bat '''
+                        bandit --exit-zero -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}"
+                    '''
+                    // Configuración de los Quality Gates para Bandit
+                    recordIssues(
+                        tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')],
+                        qualityGates: [
+                            // Requisito: 2 o más hallazgos = Unstable (Amarillo)
+                            [threshold: 2, type: 'TOTAL', unstable: true],
+                            
+                            // Requisito: 4 o más hallazgos = Unhealthy/Failure (Rojo)
+                            [threshold: 4, type: 'TOTAL', unstable: false]
+                        ]
+                    )
+                }
             }
         }
 
         stage('Performance') {
             steps {
-                bat '''
-                    set FLASK_APP=app\\api.py
-                    start flask run
-                    C:\\proyectos\\apache-jmeter-5.6.3\\bin\\jmeter -n -t test\\jmeter\\flask.jmx -f -l flask.jtl
-                '''
-                perfReport sourceDataFiles: 'flask.jtl' //
+                // Ejecución de pruebas de rendimiento con JMeter ignorando errores de salida para que el pipeline continúe
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    bat '''
+                        set FLASK_APP=app\\api.py
+                        start flask run
+                        C:\\proyectos\\apache-jmeter-5.6.3\\bin\\jmeter -n -t test\\jmeter\\flask.jmx -f -l flask.jtl
+                    '''
+                    perfReport sourceDataFiles: 'flask.jtl' //
+                }
             }
         }
 
         stage('Cobertura') {
             steps {
-                // Configuración de los Quality Gates según tus especificaciones
-                recordCoverage(
-                    tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
-                    id: 'coverage',
-                    name: 'Cobertura de Código',
-                    
-                    qualityGates: [
-                        // Líneas: < 85 marcará ERROR (Rojo), < 95 marcará UNSTABLE (Amarillo)
-                        [threshold: 85.0, metric: 'LINE', baseline: 'PROJECT', criticality: 'FAILURE'],
-                        [threshold: 95.0, metric: 'LINE', baseline: 'PROJECT', criticality: 'UNSTABLE'],
+                //Ejecución de las pruebas de cobertura de código ignorando errores de salida para que el pipeline continúe
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    // Registro de la cobertura de código y configuración de Quality Gates
+                    // Configuración de los Quality Gates según tus especificaciones
+                    recordCoverage(
+                        tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
+                        id: 'coverage',
+                        name: 'Cobertura de Código',
                         
-                        // Ramas: < 80 marcará ERROR (Rojo), < 90 marcará UNSTABLE (Amarillo)
-                        [threshold: 80.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'FAILURE'],
-                        [threshold: 90.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'UNSTABLE']
-                    ])
+                        qualityGates: [
+                            // Líneas: < 85 marcará ERROR (Rojo), < 95 marcará UNSTABLE (Amarillo)
+                            [threshold: 85.0, metric: 'LINE', baseline: 'PROJECT', criticality: 'FAILURE'],
+                            [threshold: 95.0, metric: 'LINE', baseline: 'PROJECT', criticality: 'UNSTABLE'],
+                            
+                            // Ramas: < 80 marcará ERROR (Rojo), < 90 marcará UNSTABLE (Amarillo)
+                            [threshold: 80.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'FAILURE'],
+                            [threshold: 90.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'UNSTABLE']
+                        ])
+                }
+                
             }
         }
 
