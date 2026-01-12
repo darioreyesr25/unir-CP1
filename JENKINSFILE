@@ -34,7 +34,8 @@ pipeline {
             steps {
                 bat '''
                     set PYTHONPATH=%WORKSPACE%
-                    pytest --junitxml=result-unit.xml test\\unit
+                    coverage run --branch --source=app --omit=app\\__init__.py,app\\api.py -m pytest --junitxml=result-unit.xml test\\unit
+                    coverage xml
                     '''
                     
                 }
@@ -60,13 +61,6 @@ pipeline {
 
         stage('Cobertura') {
             steps {
-                // Ejecución de pruebas y generación del reporte XML para Python
-                bat '''
-                    set PYTHONPATH=%WORKSPACE%
-                    coverage run --branch --source=app --omit=app\\__init__.py,app\\api.py -m pytest test\\unit
-                    coverage xml
-                '''
-                
                 // Configuración de los Quality Gates según tus especificaciones
                 recordCoverage(
                     tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
@@ -115,10 +109,5 @@ pipeline {
             }
         }
 
-        stage('Result') {
-            steps {
-                junit 'result*.xml'
-            }
-        }
      }
 }
