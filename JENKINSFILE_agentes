@@ -142,7 +142,7 @@ pipeline {
 
         // Etapa para analizar la cobertura de código
         stage('Coverage') {
-            agent any
+            agent { label 'agent1' }
             steps {
                 //Ejecución de las pruebas de cobertura de código ignorando errores de salida para que el pipeline continúe
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
