@@ -141,7 +141,10 @@ pipeline {
                                 hostname
                                 echo ${WORKSPACE}
                                 export FLASK_APP=app/api.py
-                                python3 -m start flask run
+                                flask routes
+                                flask run &
+                                    
+                                sleep 4
                                 /home/jenkins/workspace/apache-jmeter-5.6.3/bin/jmeter -n -t test/jmeter/flask.jmx -f -l flask.jtl
                             '''
                             perfReport sourceDataFiles: 'flask.jtl' // Generación del informe de rendimiento
