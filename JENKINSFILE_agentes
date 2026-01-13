@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'agent1' }
+    agent any
     options { skipDefaultCheckout() }
     stages {
         stage('Get Code') {
@@ -120,6 +120,7 @@ pipeline {
 
                 // Etapa para ejecutar pruebas de rendimiento con JMeter
                 stage('Performance') {
+                agent { label 'agent1' }
                     steps {
                         // Ejecución de pruebas de rendimiento con JMeter ignorando errores de salida para que el pipeline continúe
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
