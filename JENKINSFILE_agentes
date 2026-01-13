@@ -38,7 +38,7 @@ pipeline {
                 }
 
                 stage('Rest') {
-                    agent { label 'agent' }
+                    agent { label 'agent2' }
                     steps {
                         unstash name:'code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
