@@ -42,7 +42,7 @@ pipeline {
                 }
                 // Etapa para ejecutar pruebas RESTful
                 stage('Rest') {
-                    agent { label 'agent2' }
+                    agent { label 'agent' }
                     steps {
                         // Recuperar el código fuente
                         unstash name:'code'
