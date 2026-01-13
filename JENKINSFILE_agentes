@@ -26,10 +26,10 @@ pipeline {
                                 ls -la
                                 export PYTHONPATH=${WORKSPACE}
                                 coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest --junitxml=result-unit.xml test/unit
-                                coverage xml
+                                coverage xml -o coverage.xml
                                 '''
                         }
-                        stash name:'unit-res', includes:'result-unit.xml'
+                        stash name:'unit-res', includes:'result-unit.xml,coverage.xml'
                     }
                 }
 
@@ -39,13 +39,13 @@ pipeline {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             unstash name:'code'
                             sh '''
-                                whoami
-                                hostname
-                                echo ${WORKSPACE}
-                                ls -la
-                                export FLASK_APP=app/api.py
-                                flask routes
-                                flask run &
+                            whoami
+                            hostname
+                            echo ${WORKSPACE}
+                            ls -la
+                            export FLASK_APP=app/api.py
+                            flask routes
+                            flask run &
                                 
                             sleep 4
                             cp -r ${WORKSPACE}/test/wiremock/mappings /home/jenkins/wiremock/mappings
@@ -63,6 +63,110 @@ pipeline {
                         stash name:'rest-res', includes:'result-rest.xml'
                     }
                 }
+                // Etapa para análisis estático de código con flake8
+                stage('Static') {
+                    agent { label 'agent1' }
+                    steps {
+                        // Ejecución de flake8 ignorando errores de salida para que el pipeline continúe
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            // Ejecución de flake8 y redirección de la salida a un archivo
+                            bat '''
+                                whoami
+                                hostname
+                                echo ${WORKSPACE}
+                                flake8 --exit-zero --format=pylint app > flake8.out
+                            '''
+                            
+                            // Registro de incidencias con Warnings Next Generation Plugin
+                            recordIssues(
+                                tools: [flake8(name: 'Flake8', pattern: 'flake8.out')],
+                                qualityGates: [
+                                        // Si hay más de 8 avisos: UNSTABLE (Amarillo)
+                                        [threshold: 8, type: 'TOTAL', unstable: true],
+                                        // Si hay más de 11 avisos: FAILURE (Rojo)
+                                        [threshold: 10, type: 'TOTAL', unstable: false]
+                                ]
+                            )
+                        }
+                    }
+                }
+                // Etapa para análisis de seguridad de código con Bandit
+                stage('Security Test') {
+                    agent { label 'agent2' }
+                    steps {
+                        // Ejecución de Bandit ignorando errores de salida para que el pipeline continúe
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            // Ejecución de Bandit y redirección de la salida a un archivo
+                            bat '''
+                                whoami
+                                hostname
+                                echo ${WORKSPACE}
+                                bandit --exit-zero -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}"
+                            '''
+                            // Configuración de los Quality Gates para Bandit
+                            recordIssues(
+                                tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')],
+                                qualityGates: [
+                                    // Requisito: 2 o más hallazgos = Unstable (Amarillo)
+                                    [threshold: 2, type: 'TOTAL', unstable: true],
+                                    
+                                    // Requisito: 4 o más hallazgos = Unhealthy/Failure (Rojo)
+                                    [threshold: 4, type: 'TOTAL', unstable: false]
+                                ]
+                            )
+                        }
+                    }
+                }
+
+                // Etapa para ejecutar pruebas de rendimiento con JMeter
+                stage('Performance') {
+                    steps {
+                        // Ejecución de pruebas de rendimiento con JMeter ignorando errores de salida para que el pipeline continúe
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            // Iniciar el servidor Flask y ejecutar las pruebas de rendimiento con JMeter
+                            bat '''
+                                whoami
+                                hostname
+                                echo ${WORKSPACE}
+                                export FLASK_APP=app/api.py
+                                start flask run
+                                /home/jenkins/workspace/apache-jmeter-5.6.3/bin/jmeter -n -t test/jmeter/flask.jmx -f -l flask.jtl
+                            '''
+                            perfReport sourceDataFiles: 'flask.jtl' // Generación del informe de rendimiento
+                        }
+                    }
+                }
+            }
+
+        }
+
+        // Etapa para analizar la cobertura de código
+        stage('Coverage') {
+            agent any
+            steps {
+                //Ejecución de las pruebas de cobertura de código ignorando errores de salida para que el pipeline continúe
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    // Registro de la cobertura de código y configuración de Quality Gates
+                    // Se utiliza el informe coverage.xml generado en la etapa 'Unit'
+                    unstash name: 'unit-res'                       // recuperar coverage.xml y result-unit.xml
+                    junit 'result-unit.xml'                       // publicar resultados de unit
+                    recordCoverage(
+                        tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
+                        id: 'coverage',
+                        name: 'Cobertura de Código',
+                        // Definición de los Quality Gates para la cobertura de código
+                        qualityGates: [
+                            // Líneas: < 85 marcará ERROR (Rojo), < 95 marcará UNSTABLE (Amarillo)
+                            [threshold: 85.0, metric: 'LINE', baseline: 'PROJECT', criticality: 'FAILURE'],
+                            [threshold: 95.0, metric: 'LINE', baseline: 'PROJECT', criticality: 'UNSTABLE'],
+                            
+                            // Ramas: < 80 marcará ERROR (Rojo), < 90 marcará UNSTABLE (Amarillo)
+                            [threshold: 80.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'FAILURE'],
+                            [threshold: 90.0, metric: 'BRANCH', baseline: 'PROJECT', criticality: 'UNSTABLE']
+                        ]
+                    )
+                }
+                
             }
         }
     }
