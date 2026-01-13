@@ -20,8 +20,9 @@ pipeline {
                 stage('Unit') {
                     agent { label 'agent1' }
                     steps {
+                        unstash name:'code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            unstash name:'code'
+                           
                             sh '''
                                 whoami
                                 hostname
@@ -39,8 +40,9 @@ pipeline {
                 stage('Rest') {
                     agent { label 'agent2' }
                     steps {
+                        unstash name:'code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            unstash name:'code'
+                            
                             sh '''
                             whoami
                             hostname
@@ -70,9 +72,10 @@ pipeline {
                 stage('Static') {
                     agent { label 'agent1' }
                     steps {
+                        unstash name:'code'
                         // Ejecución de flake8 ignorando errores de salida para que el pipeline continúe
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            unstash name:'code'
+                            
                             // Ejecución de flake8 y redirección de la salida a un archivo
                             sh '''
                                 whoami
@@ -98,9 +101,10 @@ pipeline {
                 stage('Security Test') {
                     agent { label 'agent2' }
                     steps {
+                        unstash name:'code'
                         // Ejecución de Bandit ignorando errores de salida para que el pipeline continúe
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            unstash name:'code'
+                            
                             // Ejecución de Bandit y redirección de la salida a un archivo
                             sh '''
                                 whoami
@@ -127,9 +131,10 @@ pipeline {
                 stage('Performance') {
                 agent { label 'agent1' }
                     steps {
+                        unstash name:'code'
                         // Ejecución de pruebas de rendimiento con JMeter ignorando errores de salida para que el pipeline continúe
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            unstash name:'code'
+                            
                             // Iniciar el servidor Flask y ejecutar las pruebas de rendimiento con JMeter
                             sh '''
                                 whoami
@@ -151,9 +156,10 @@ pipeline {
         stage('Coverage') {
             agent any
             steps {
+                unstash name:'code'
                 //Ejecución de las pruebas de cobertura de código ignorando errores de salida para que el pipeline continúe
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    unstash name:'code'
+                    
                     // Registro de la cobertura de código y configuración de Quality Gates
                     // Se utiliza el informe coverage.xml generado en la etapa 'Unit'
                     unstash name: 'unit-res'                       // recuperar coverage.xml y result-unit.xml
