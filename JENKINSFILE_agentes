@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'agent1' }
     options { skipDefaultCheckout() }
     stages {
         stage('Get Code') {
@@ -7,7 +7,10 @@ pipeline {
                 // Obtener código del repo
                 git 'https://github.com/darioreyesr25/unir-CP1.git'
                 echo WORKSPACE
-                bat 'dir'
+                sh '''
+                    whoami
+                    hostname
+                    echo ${WORKSPACE}'''
                 stash name:'code', includes:'**/*'
             }
         }
@@ -69,8 +72,9 @@ pipeline {
                     steps {
                         // Ejecución de flake8 ignorando errores de salida para que el pipeline continúe
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            unstash name:'code'
                             // Ejecución de flake8 y redirección de la salida a un archivo
-                            bat '''
+                            sh '''
                                 whoami
                                 hostname
                                 echo ${WORKSPACE}
@@ -96,8 +100,9 @@ pipeline {
                     steps {
                         // Ejecución de Bandit ignorando errores de salida para que el pipeline continúe
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            unstash name:'code'
                             // Ejecución de Bandit y redirección de la salida a un archivo
-                            bat '''
+                            sh '''
                                 whoami
                                 hostname
                                 echo ${WORKSPACE}
@@ -124,8 +129,9 @@ pipeline {
                     steps {
                         // Ejecución de pruebas de rendimiento con JMeter ignorando errores de salida para que el pipeline continúe
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            unstash name:'code'
                             // Iniciar el servidor Flask y ejecutar las pruebas de rendimiento con JMeter
-                            bat '''
+                            sh '''
                                 whoami
                                 hostname
                                 echo ${WORKSPACE}
@@ -147,10 +153,15 @@ pipeline {
             steps {
                 //Ejecución de las pruebas de cobertura de código ignorando errores de salida para que el pipeline continúe
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    unstash name:'code'
                     // Registro de la cobertura de código y configuración de Quality Gates
                     // Se utiliza el informe coverage.xml generado en la etapa 'Unit'
                     unstash name: 'unit-res'                       // recuperar coverage.xml y result-unit.xml
                     junit 'result-unit.xml'                       // publicar resultados de unit
+                     sh '''
+                                whoami
+                                hostname
+                                echo ${WORKSPACE}'''
                     recordCoverage(
                         tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']],
                         id: 'coverage',
