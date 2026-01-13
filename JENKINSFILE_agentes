@@ -28,7 +28,7 @@ pipeline {
                                 hostname
                                 echo ${WORKSPACE}
                                 ls -la
-                                export PYTHONPATH=${WORKSPACE}
+                                set PYTHONPATH=${WORKSPACE}
                                 coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest --junitxml=result-unit.xml test/unit
                                 coverage xml -o coverage.xml
                                 '''
@@ -48,7 +48,7 @@ pipeline {
                             hostname
                             echo ${WORKSPACE}
                             ls -la
-                            export FLASK_APP=app/api.py
+                            set FLASK_APP=app/api.py
                             flask routes
                             flask run &
                                 
