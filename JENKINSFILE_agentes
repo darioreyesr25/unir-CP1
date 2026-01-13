@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'agent1' }
     options { skipDefaultCheckout() }
     stages {
         stage('Get Code') {
@@ -142,7 +142,7 @@ pipeline {
 
         // Etapa para analizar la cobertura de código
         stage('Coverage') {
-            agent { label 'agent1' }
+            agent any
             steps {
                 //Ejecución de las pruebas de cobertura de código ignorando errores de salida para que el pipeline continúe
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
