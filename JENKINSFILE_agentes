@@ -14,13 +14,16 @@ pipeline {
                 stash name:'code', includes:'**/*'
             }
         }
-
+        // Etapa para ejecutar las pruebas en paralelo en diferentes agentes
         stage('Tests') {
             parallel {
+                // Etapa para ejecutar pruebas unitarias con cobertura de código
                 stage('Unit') {
                     agent { label 'agent' }
                     steps {
+                        // Recuperar el código fuente
                         unstash name:'code'
+                        // Ejecución de las pruebas unitarias con cobertura de código ignorando errores de salida para que el pipeline continúe
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                            
                             sh '''
@@ -33,14 +36,17 @@ pipeline {
                                 python3 -m coverage xml -o coverage.xml
                                 '''
                         }
+                        // stash name de los resultados de las pruebas unitarias y cobertura
                         stash name:'unit-res', includes:'result-unit.xml,coverage.xml'
                     }
                 }
-
+                // Etapa para ejecutar pruebas RESTful
                 stage('Rest') {
                     agent { label 'agent2' }
                     steps {
+                        // Recuperar el código fuente
                         unstash name:'code'
+                        // Ejecución de las pruebas RESTful ignorando errores de salida para que el pipeline continúe
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             
                             sh '''
@@ -72,6 +78,7 @@ pipeline {
                 stage('Static') {
                     agent { label 'agent' }
                     steps {
+                        // Recuperar el código fuente
                         unstash name:'code'
                         // Ejecución de flake8 ignorando errores de salida para que el pipeline continúe
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -101,6 +108,7 @@ pipeline {
                 stage('Security Test') {
                     agent { label 'agent' }
                     steps {
+                        // Recuperar el código fuente
                         unstash name:'code'
                         // Ejecución de Bandit ignorando errores de salida para que el pipeline continúe
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -131,6 +139,7 @@ pipeline {
                 stage('Performance') {
                 agent { label 'agent' }
                     steps {
+                        // Recuperar el código fuente
                         unstash name:'code'
                         // Ejecución de pruebas de rendimiento con JMeter ignorando errores de salida para que el pipeline continúe
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -159,6 +168,7 @@ pipeline {
         stage('Coverage') {
             agent { label 'agent' }
             steps {
+                // Recuperar el código fuente
                 unstash name:'code'
                 //Ejecución de las pruebas de cobertura de código ignorando errores de salida para que el pipeline continúe
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -214,6 +224,7 @@ pipeline {
                         }
                     }
                 }
+                // Limpieza del workspace del agente2
                 stage('Cleanup agent2') {
                     agent { label 'agent2' }
                     steps {
