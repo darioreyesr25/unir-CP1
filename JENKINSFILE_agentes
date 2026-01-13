@@ -25,7 +25,8 @@ pipeline {
                                 echo ${WORKSPACE}
                                 ls -la
                                 export PYTHONPATH=${WORKSPACE}
-                                pytest --junitxml=result-unit.xml test/unit
+                                coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest --junitxml=result-unit.xml test/unit
+                                coverage xml
                                 '''
                         }
                         stash name:'unit-res', includes:'result-unit.xml'
