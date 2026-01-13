@@ -190,5 +190,49 @@ pipeline {
                 
             }
         }
+
+        // Etapa para limpiar los workspaces de los agentes
+        stage('Cleanup Workspaces') {
+            // Usar ejecución en paralelo para limpiar los workspaces de los agentes
+            parallel {
+                stage('Cleanup agent1') {
+                    agent { label 'agent1' }
+                    steps {
+                        // Limpiar el workspace del agente1
+                        script {
+                            try {
+                                // Herramienta de Jenkins para limpiar el workspace
+                                cleanWs()
+                            } catch (err) {
+                                // Si cleanWs falla, limpiar manualmente
+                                sh '''
+                                    echo "Limpiar Workspace manualmente"
+                                    rm -rf "${WORKSPACE}/"*
+                                    rm -rf "${WORKSPACE}/".[!.]* || true
+                                '''
+                            }
+                        }
+                    }
+                }
+                stage('Cleanup agent2') {
+                    agent { label 'agent2' }
+                    steps {
+                        script {
+                            try {
+                                 // Herramienta de Jenkins para limpiar el workspace
+                                cleanWs()
+                            } catch (err) {
+                                // Si cleanWs falla, limpiar manualmente
+                                sh '''
+                                    echo "Limpiar Workspace manualmente"
+                                    rm -rf "${WORKSPACE}/"*
+                                    rm -rf "${WORKSPACE}/".[!.]* || true
+                                '''
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
