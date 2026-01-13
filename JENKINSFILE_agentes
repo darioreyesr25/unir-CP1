@@ -7,7 +7,7 @@ pipeline {
                 // Obtener código del repo
                 git 'https://github.com/darioreyesr25/unir-CP1.git'
                 echo WORKSPACE
-                sh '''
+                bat '''
                     whoami
                     hostname
                     echo ${WORKSPACE}'''
