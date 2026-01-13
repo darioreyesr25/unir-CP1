@@ -18,7 +18,7 @@ pipeline {
         stage('Tests') {
             parallel {
                 stage('Unit') {
-                    agent { label 'agent*' }
+                    agent { label 'agent' }
                     steps {
                         unstash name:'code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -38,7 +38,7 @@ pipeline {
                 }
 
                 stage('Rest') {
-                    agent { label 'agent*' }
+                    agent { label 'agent' }
                     steps {
                         unstash name:'code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -70,7 +70,7 @@ pipeline {
                 }
                 // Etapa para análisis estático de código con flake8
                 stage('Static') {
-                    agent { label 'agent*' }
+                    agent { label 'agent' }
                     steps {
                         unstash name:'code'
                         // Ejecución de flake8 ignorando errores de salida para que el pipeline continúe
@@ -99,7 +99,7 @@ pipeline {
                 }
                 // Etapa para análisis de seguridad de código con Bandit
                 stage('Security Test') {
-                    agent { label 'agent*' }
+                    agent { label 'agent' }
                     steps {
                         unstash name:'code'
                         // Ejecución de Bandit ignorando errores de salida para que el pipeline continúe
@@ -129,7 +129,7 @@ pipeline {
 
                 // Etapa para ejecutar pruebas de rendimiento con JMeter
                 stage('Performance') {
-                agent { label 'agent*' }
+                agent { label 'agent' }
                     steps {
                         unstash name:'code'
                         // Ejecución de pruebas de rendimiento con JMeter ignorando errores de salida para que el pipeline continúe
@@ -157,7 +157,7 @@ pipeline {
 
         // Etapa para analizar la cobertura de código
         stage('Coverage') {
-            agent { label 'agent*' }
+            agent { label 'agent' }
             steps {
                 unstash name:'code'
                 //Ejecución de las pruebas de cobertura de código ignorando errores de salida para que el pipeline continúe
