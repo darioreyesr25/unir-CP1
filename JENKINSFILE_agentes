@@ -28,9 +28,9 @@ pipeline {
                                 hostname
                                 echo ${WORKSPACE}
                                 ls -la
-                                export PYTHONPATH=/home/jenkins/workspace/CP1/CP1.2
-                                coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest --junitxml=result-unit.xml test/unit
-                                coverage xml -o coverage.xml
+                                export PYTHONPATH=${WORKSPACE}
+                                python3 -m coverage run --branch --source=app --omit=app/__init__.py,app/api.py -m pytest --junitxml=result-unit.xml test/unit
+                                python3 -m coverage xml -o coverage.xml
                                 '''
                         }
                         stash name:'unit-res', includes:'result-unit.xml,coverage.xml'
