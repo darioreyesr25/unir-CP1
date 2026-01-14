@@ -7,7 +7,7 @@ pipeline {
         stage('Get Code') {
             steps {
                 // Obtener código del repo
-                git branch: 'feature_fix_coverage', 'https://github.com/darioreyesr25/unir-CP1.git'
+                git 'https://github.com/darioreyesr25/unir-CP1.git'
                 bat 'dir'
                 echo WORKSPACE
             }
