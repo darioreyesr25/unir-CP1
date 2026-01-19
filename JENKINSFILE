@@ -8,6 +8,7 @@ pipeline {
             steps {
                 // Obtener código del repo
                 git 'https://github.com/darioreyesr25/unir-CP1.git'
+                bat 'git checkout feature_fix_coverage'
                 bat 'dir'
                 echo WORKSPACE
             }
